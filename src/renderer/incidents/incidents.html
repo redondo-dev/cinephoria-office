@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinephoria Office - Gestion des Incidents</title>
+    <link rel="stylesheet" href="incidents.css">
+    <!-- Bibliothèques PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">
+                    <span class="app-icon">🎬</span>
+                    Cinephoria Office
+                </h1>
+                <div class="header-actions">
+                    <button id="refreshBtn" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span>
+                        Actualiser
+                    </button>
+                    <button id="newIncidentBtn" class="btn btn-primary">
+                        <span class="btn-icon">➕</span>
+                        Nouvel Incident
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Section des statistiques -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalIncidents">0</div>
+                        <div class="stat-label">Incidents Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="openIncidents">0</div>
+                        <div class="stat-label">Ouverts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="criticalIncidents">0</div>
+                        <div class="stat-label">Critiques</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section des filtres -->
+            <section class="filters-section">
+                <div class="filters-container">
+                    <div class="filter-group">
+                        <label for="roomFilter">Salle :</label>
+                        <select id="roomFilter" class="filter-select">
+                            <option value="">Toutes les salles</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="statusFilter">Statut :</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">Tous les statuts</option>
+                            <option value="open">Ouverts</option>
+                            <option value="in_progress">En cours</option>
+                            <option value="resolved">Résolus</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priorityFilter">Priorité :</label>
+                        <select id="priorityFilter" class="filter-select">
+                            <option value="all">Toutes</option>
+                            <option value="critical">Critique</option>
+                            <option value="high">Haute</option>
+                            <option value="medium">Moyenne</option>
+                            <option value="low">Basse</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Liste des incidents -->
+            <section class="incidents-section">
+                <div class="section-header">
+                    <h2>Incidents Signalés</h2>
+                    <div class="section-actions">
+                        <button id="exportBtn" class="btn btn-outline">
+                            <span class="btn-icon">📤</span>
+                            Exporter
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loadingIndicator" class="loading">
+                    <div class="spinner"></div>
+                    <span>Chargement des incidents...</span>
+                </div>
+
+                <div id="errorMessage" class="error-message hidden">
+                    <span class="error-icon">⚠️</span>
+                    <span class="error-text"></span>
+                    <button id="retryBtn" class="btn btn-small">Réessayer</button>
+                </div>
+
+                <div id="incidentsList" class="incidents-list">
+                    <!-- Les incidents seront injectés ici par JavaScript -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de création d'incident -->
+    <div id="incidentModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Signaler un Nouvel Incident</h3>
+                <button id="closeModal" class="modal-close">&times;</button>
+            </div>
+            <form id="incidentForm" class="modal-form">
+                <div class="form-group">
+                    <label for="roomSelect" class="form-label">Salle *</label>
+                    <select id="roomSelect" class="form-select" required>
+                        <option value="">Sélectionnez une salle</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentSelect" class="form-label">Équipement *</label>
+                    <select id="equipmentSelect" class="form-select" required>
+                        <option value="">Sélectionnez un équipement</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="prioritySelect" class="form-label">Priorité *</label>
+                    <select id="prioritySelect" class="form-select" required>
+                        <option value="low">🟢 Basse</option>
+                        <option value="medium" selected>🟡 Moyenne</option>
+                        <option value="high">🟠 Haute</option>
+                        <option value="critical">🔴 Critique</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Description de l'incident *</label>
+                    <textarea id="description" class="form-textarea"
+                        placeholder="Décrivez l'incident en détail (siège cassé, projecteur défaillant, etc.)..."
+                        required rows="4"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="cancelBtn" class="btn btn-secondary">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="btn-icon">🚨</span>
+                        Signaler l'incident
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="./../shared/api.js"></script>
+    <script src="exportManager.js"></script>
+    <script src="incidents.js"></script>
+</body>
+
+</html>
